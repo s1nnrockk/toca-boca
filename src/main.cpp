@@ -36,6 +36,7 @@ float animationTime = 0.0f;
 float walkTime = 0.0f;
 float messageUntil = 0.0f;
 std::string sceneMessage;
+std::string currentInteriorLabel = "HOME";
 float facing = 1.0f;
 Camera2D camera{};
 
@@ -242,7 +243,7 @@ void DrawInterior() {
     DrawCircle(1025, 275, 42, {103, 165, 113, 255});
     DrawRectangle(1017, 310, 16, 38, {139, 105, 76, 255});
     DrawRectangleRounded({28, 24, 540, 88}, 0.22f, 16, paper);
-    DrawText("INSIDE", 54, 40, 30, ink);
+    DrawText(currentInteriorLabel.c_str(), 54, 40, 30, ink);
     DrawText(place.name, 56, 80, 16, muted);
     DrawRectangleRounded({1080, 24, 170, 54}, 0.4f, 16, paper);
     DrawText("GO OUTSIDE", 1092, 42, 16, ink);
@@ -308,7 +309,7 @@ void DrawRegionScene() {
             for (int i = 0; i < 4; ++i) {
                 const int x = 145 + i * 265;
                 DrawRectangle(x, 360, 145, 115, {244, 218, 169, 255});
-                DrawTriangle({x - 12, 360}, {x + 72, 285}, {x + 157, 360}, {190, 119, 94, 255});
+                DrawTriangle({(float)(x - 12), 360.0f}, {(float)(x + 72), 285.0f}, {(float)(x + 157), 360.0f}, {190, 119, 94, 255});
                 DrawRectangle(x + 55, 400, 34, 75, {139, 98, 75, 255});
                 Tree((float)x + 190, 430, 0.9f, {91, 158, 97, 255});
             }
@@ -341,7 +342,7 @@ void DrawRegionScene() {
             for (int i = 0; i < 5; ++i) {
                 const int x = 75 + i * 240;
                 DrawRectangle(x, 340, 170, 125, {173, 207, 222, 255});
-                DrawTriangle({x - 14, 342}, {x + 85, 255}, {x + 184, 342}, {105, 146, 174, 255});
+                DrawTriangle({(float)(x - 14), 342.0f}, {(float)(x + 85), 255.0f}, {(float)(x + 184), 342.0f}, {105, 146, 174, 255});
                 DrawRectangle(x + 68, 390, 36, 75, {133, 98, 81, 255});
                 DrawRectangle(x + 20, 365, 35, 34, {123, 183, 201, 255});
                 Tree((float)x + 205, 430, 0.95f, {75, 133, 122, 255});
@@ -437,6 +438,16 @@ void UpdateGame(float dt) {
         return;
     }
 
+    if (insideBuilding) {
+        if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_BACKSPACE) ||
+            (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && InRect({1080, 24, 170, 54}, pointer))) {
+            insideBuilding = false;
+            return;
+        }
+        if (IsKeyPressed(KEY_C)) characterStyle = (characterStyle + 1) % 4;
+        return;
+    }
+
     Vector2 direction{0, 0};
     if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) direction.x -= 1.0f;
     if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) direction.x += 1.0f;
@@ -470,8 +481,13 @@ void UpdateGame(float dt) {
     player.y = std::clamp(player.y, 175.0f, 630.0f);
 
     if (IsKeyPressed(KEY_E) || (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && InRect({555, 610, 170, 42}, pointer))) {
-        if (const SceneProp* prop = FindNearbyProp()) sceneMessage = prop->message;
-        else sceneMessage = "Walk closer to an object to interact!";
+        if (const SceneProp* prop = FindNearbyProp()) {
+            sceneMessage = prop->message;
+            if (IsBuildingProp(prop)) {
+                insideBuilding = true;
+                currentInteriorLabel = prop->label;
+            }
+        } else sceneMessage = "Walk closer to an object to interact!";
         messageUntil = animationTime + 2.8f;
     }
 
