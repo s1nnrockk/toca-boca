@@ -14,9 +14,10 @@ An unofficial, original social-life sandbox prototype inspired by the broad idea
 - Six distinct handcrafted region scenes: city, valley, autumn forest, snowy town, seaside, and park
 - Region scenes with a movable character, animated walking, and facing direction
 - Three themed, walk-up props in every region (18 interactive props total)
-- Six stylized furnished interior rooms accessible from selected buildings
+- Enterable building interiors with distinct shop, cafe, bakery, and home details
+- Discovery journal that records all 18 interactive objects and shows progress in each region
 - Four character outfit color styles, cycled with `C`
-- Interactions show location-specific messages; use `E` on desktop or the on-screen button on touch devices
+- Interactions show location-specific messages and mark objects in the discovery journal; use `E` on desktop or the on-screen button on touch devices
 - Mouse, keyboard, and touch-oriented directional-pad controls
 - Camera scaling for different desktop and mobile aspect ratios
 
