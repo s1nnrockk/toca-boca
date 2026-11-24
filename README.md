@@ -14,6 +14,8 @@ An unofficial, original social-life sandbox prototype inspired by the broad idea
 - Six distinct handcrafted region scenes: city, valley, autumn forest, snowy town, seaside, and park
 - Region scenes with a movable character, animated walking, and facing direction
 - Three themed, walk-up props in every region (18 interactive props total)
+- Six stylized furnished interior rooms accessible from selected buildings
+- Four character outfit color styles, cycled with `C`
 - Interactions show location-specific messages; use `E` on desktop or the on-screen button on touch devices
 - Mouse, keyboard, and touch-oriented directional-pad controls
 - Camera scaling for different desktop and mobile aspect ratios
@@ -42,5 +44,5 @@ Artifacts are attached to the completed workflow run.
 The current art is drawn procedurally in C++ and is original placeholder artwork. No proprietary Toca Boca images, sounds, animations, maps, or game files are included. Add only assets that you own or are licensed to redistribute.
 
 ## Controls
-- Desktop: WASD / arrow keys to move, `E` or the on-screen Interact button to use nearby props, click map markers to travel, and click the map button to return.
-- Android: touch a map marker; drag from the on-screen directional pad to move and tap Interact when near a prop.
+- Desktop: WASD / arrow keys to move, `E` or the on-screen Interact button to use nearby props / enter buildings, `C` to cycle outfit colors, click map markers to travel, and use `Esc` to leave interiors or return to the map.
+- Android: touch a map marker; drag from the on-screen directional pad to move and tap Interact when near a prop or building.
