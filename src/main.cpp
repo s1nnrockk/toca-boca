@@ -37,6 +37,7 @@ float walkTime = 0.0f;
 float messageUntil = 0.0f;
 std::string sceneMessage;
 std::string currentInteriorLabel = "HOME";
+bool discoveredProps[6][3]{};
 float facing = 1.0f;
 Camera2D camera{};
 
@@ -199,12 +200,24 @@ const std::array<std::array<SceneProp, 3>, 6> sceneProps{{
     {{{{230,500},"UMBRELLA","A perfect beach day!",{239,139,119,255}},{{640,520},"BOAT","The boat is ready at the shore.",{102,163,190,255}},{{1030,500},"PIER","Look out over the sea!",{145,112,86,255}}}},
     {{{{220,500},"PICNIC","Time for a picnic!",{225,157,105,255}},{{640,500},"LOOKOUT","What a lovely view!",{130,169,111,255}},{{1030,500},"POND","There are fish in the pond.",{103,184,196,255}}}}
 }};
+int DiscoveredCount() {
+    int total = 0;
+    for (int region = 0; region < 6; ++region)
+        for (int prop = 0; prop < 3; ++prop)
+            if (discoveredProps[region][prop]) ++total;
+    return total;
+}
+
 void DrawSceneProps() {
-    for (const SceneProp& p : sceneProps[(size_t)selectedPlace]) {
+    for (size_t i = 0; i < sceneProps[(size_t)selectedPlace].size(); ++i) {
+        const SceneProp& p = sceneProps[(size_t)selectedPlace][i];
+        const bool found = discoveredProps[selectedPlace][i];
         DrawEllipse(p.position.x,p.position.y+18,29,8,Fade(ink,0.18f));
-        DrawRectangleRounded({p.position.x-25,p.position.y-15,50,32},0.28f,8,p.color);
-        DrawCircleV({p.position.x,p.position.y-17},13,Fade(WHITE,0.9f));
-        DrawText(p.label,(int)p.position.x-MeasureText(p.label,12)/2,(int)p.position.y+24,12,ink);
+        DrawRectangleRounded({p.position.x-25,p.position.y-15,50,32},0.28f,8,found ? Fade(p.color,0.55f) : p.color);
+        DrawCircleV({p.position.x,p.position.y-17},13,found ? mint : Fade(WHITE,0.9f));
+        DrawText(found ? "+" : p.label, (int)p.position.x - (found ? 5 : MeasureText(p.label,12)/2),
+                 (int)p.position.y + (found ? -23 : 24), found ? 18 : 12, found ? WHITE : ink);
+        if (found) DrawText(p.label,(int)p.position.x-MeasureText(p.label,10)/2,(int)p.position.y+24,10,muted);
     }
 }
 const SceneProp* FindNearbyProp() {
@@ -397,6 +410,8 @@ void DrawRegionScene() {
     DrawText("WORLD MAP", 1101, 42, 18, ink);
     DrawRectangleRounded({28, 650, 440, 42}, 0.35f, 12, Fade(paper, 0.92f));
     DrawText("WASD: MOVE   E: INTERACT   C: CHANGE OUTFIT", 45, 663, 16, ink);
+    DrawRectangleRounded({920, 90, 330, 48}, 0.35f, 12, paper);
+    DrawText(TextFormat("DISCOVERIES  %02i / 18", DiscoveredCount()), 945, 105, 18, ink);
     if (animationTime < messageUntil) {
         DrawRectangleRounded({465, 610, 350, 52}, 0.35f, 14, paper);
         DrawText(sceneMessage.c_str(), 490, 627, 19, ink);
@@ -482,7 +497,10 @@ void UpdateGame(float dt) {
 
     if (IsKeyPressed(KEY_E) || (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && InRect({555, 610, 170, 42}, pointer))) {
         if (const SceneProp* prop = FindNearbyProp()) {
-            sceneMessage = prop->message;
+            const int propIndex = (int)(prop - sceneProps[(size_t)selectedPlace].data());
+            const bool firstVisit = !discoveredProps[selectedPlace][propIndex];
+            discoveredProps[selectedPlace][propIndex] = true;
+            sceneMessage = firstVisit ? std::string("Added to your discovery book: ") + prop->label : prop->message;
             if (IsBuildingProp(prop)) {
                 insideBuilding = true;
                 currentInteriorLabel = prop->label;
