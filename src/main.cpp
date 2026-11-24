@@ -255,6 +255,39 @@ void DrawInterior() {
     DrawRectangleRounded({945, 320, 160, 60}, 0.18f, 12, {202, 224, 186, 255});
     DrawCircle(1025, 275, 42, {103, 165, 113, 255});
     DrawRectangle(1017, 310, 16, 38, {139, 105, 76, 255});
+
+    // Each enterable place gets a recognizable interior feature.
+    if (currentInteriorLabel == "SHOP") {
+        for (int row = 0; row < 3; ++row) {
+            DrawRectangle(75, 355 + row * 42, 250, 9, {139, 105, 76, 255});
+            for (int col = 0; col < 4; ++col)
+                DrawRectangleRounded({88.0f + col * 57.0f, 322.0f + row * 42.0f, 34, 30},
+                                     0.18f, 6, (row + col) % 2 ? coral : mint);
+        }
+        DrawText("FRESH  •  LOCAL  •  FUN", 95, 280, 18, ink);
+    } else if (currentInteriorLabel == "CAFE") {
+        for (int i = 0; i < 2; ++i) {
+            const int x = 250 + i * 690;
+            DrawRectangleRounded({(float)x, 430, 145, 15}, 0.4f, 8, {139, 105, 76, 255});
+            DrawRectangle(x + 16, 445, 10, 55, {139, 105, 76, 255});
+            DrawRectangle(x + 119, 445, 10, 55, {139, 105, 76, 255});
+            DrawCircle(x + 70, 411, 16, {225, 139, 110, 255});
+            DrawCircle(x + 70, 411, 7, {255, 235, 196, 255});
+        }
+        DrawText("CAFE  /  OPEN", 485, 155, 28, ink);
+    } else if (currentInteriorLabel == "BAKERY") {
+        DrawRectangleRounded({820, 245, 320, 95}, 0.12f, 12, {188, 129, 88, 255});
+        for (int i = 0; i < 5; ++i) {
+            DrawEllipse(850 + i * 58, 280, 20, 13, {226, 174, 103, 255});
+            DrawLineEx({840.0f + i * 58, 280}, {860.0f + i * 58, 280}, 2, {255, 231, 186, 255});
+        }
+        DrawText("BAKED TODAY", 870, 215, 20, ink);
+    } else {
+        DrawRectangleRounded({470, 430, 330, 34}, 0.4f, 12, {218, 179, 133, 255});
+        DrawRectangleRounded({520, 448, 18, 55}, 0.3f, 8, {139, 105, 76, 255});
+        DrawRectangleRounded({730, 448, 18, 55}, 0.3f, 8, {139, 105, 76, 255});
+    }
+
     DrawRectangleRounded({28, 24, 540, 88}, 0.22f, 16, paper);
     DrawText(currentInteriorLabel.c_str(), 54, 40, 30, ink);
     DrawText(place.name, 56, 80, 16, muted);
