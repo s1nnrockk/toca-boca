@@ -31,6 +31,10 @@ int selectedPlace = -1;
 Vector2 player{640, 500};
 bool showMap = true;
 float animationTime = 0.0f;
+float walkTime = 0.0f;
+float messageUntil = 0.0f;
+std::string sceneMessage;
+float facing = 1.0f;
 Camera2D camera{};
 
 const Color ink{55, 76, 79, 255};
@@ -184,12 +188,19 @@ void DrawMap() {
 }
 
 void DrawCharacter() {
+    const float moving = walkTime > 0.0f ? 1.0f : 0.0f;
+    const float bob = moving * std::fabs(std::sin(animationTime * 12.0f)) * 3.0f;
+    const float legSwing = moving * std::sin(animationTime * 12.0f) * 7.0f;
+    const float y = player.y - bob;
     DrawEllipse(player.x, player.y + 43, 25, 9, Fade(ink, 0.2f));
-    DrawRectangleRounded({player.x - 18, player.y - 2, 36, 43}, 0.35f, 10, coral);
-    DrawCircleV({player.x, player.y - 18}, 19, {246, 195, 150, 255});
-    DrawCircleV({player.x - 7, player.y - 19}, 3, ink);
-    DrawCircleV({player.x + 7, player.y - 19}, 3, ink);
-    DrawLineEx({player.x - 6, player.y - 8}, {player.x + 6, player.y - 8}, 2, ink);
+    DrawLineEx({player.x - 7, y + 30}, {player.x - 8 - legSwing, y + 45}, 7, {89, 116, 145, 255});
+    DrawLineEx({player.x + 7, y + 30}, {player.x + 8 + legSwing, y + 45}, 7, {89, 116, 145, 255});
+    DrawRectangleRounded({player.x - 18, y - 2, 36, 43}, 0.35f, 10, coral);
+    DrawCircleV({player.x, y - 18}, 19, {246, 195, 150, 255});
+    const float eyeOffset = facing >= 0 ? 1.0f : -1.0f;
+    DrawCircleV({player.x - 7 + eyeOffset*2, y - 19}, 3, ink);
+    DrawCircleV({player.x + 7 + eyeOffset*2, y - 19}, 3, ink);
+    DrawLineEx({player.x - 6, y - 8}, {player.x + 6, y - 8}, 2, ink);
 }
 
 void DrawRegionScene() {
@@ -307,6 +318,12 @@ void DrawRegionScene() {
     DrawText(p.description, 56, 80, 16, muted);
     DrawRectangleRounded({1080, 24, 170, 54}, 0.4f, 16, paper);
     DrawText("WORLD MAP", 1101, 42, 18, ink);
+    DrawRectangleRounded({28, 650, 440, 42}, 0.35f, 12, Fade(paper, 0.92f));
+    DrawText("WASD / ARROWS: MOVE     E: EXPLORE", 45, 663, 16, ink);
+    if (animationTime < messageUntil) {
+        DrawRectangleRounded({465, 610, 350, 52}, 0.35f, 14, paper);
+        DrawText(sceneMessage.c_str(), 490, 627, 19, ink);
+    }
 
     const float padX = 1130.0f, padY = 565.0f;
     DrawCircleV({padX, padY}, 72, Fade(paper, 0.75f));
@@ -344,21 +361,42 @@ void UpdateGame(float dt) {
         return;
     }
 
-    const float speed = 245.0f * dt;
-    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) player.x -= speed;
-    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) player.x += speed;
-    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)) player.y -= speed;
-    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) player.y += speed;
+    Vector2 direction{0, 0};
+    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) direction.x -= 1.0f;
+    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) direction.x += 1.0f;
+    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)) direction.y -= 1.0f;
+    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) direction.y += 1.0f;
 
+    // Touch-friendly directional pad: drag from its center toward a direction.
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && pointer.x > 1035 && pointer.y > 470) {
-        const float dx = pointer.x - 1130;
-        const float dy = pointer.y - 565;
-        if (std::fabs(dx) > std::fabs(dy)) player.x += dx > 0 ? speed : -speed;
-        else player.y += dy > 0 ? speed : -speed;
+        const float dx = pointer.x - 1130.0f;
+        const float dy = pointer.y - 565.0f;
+        const float length = std::sqrt(dx*dx + dy*dy);
+        if (length > 10.0f) {
+            direction.x += dx / length;
+            direction.y += dy / length;
+        }
+    }
+
+    const float magnitude = std::sqrt(direction.x*direction.x + direction.y*direction.y);
+    if (magnitude > 0.0f) {
+        direction.x /= magnitude;
+        direction.y /= magnitude;
+        player.x += direction.x * 245.0f * dt;
+        player.y += direction.y * 245.0f * dt;
+        walkTime = 1.0f;
+        if (std::fabs(direction.x) > 0.1f) facing = direction.x > 0 ? 1.0f : -1.0f;
+    } else {
+        walkTime = 0.0f;
     }
 
     player.x = std::clamp(player.x, 55.0f, 1225.0f);
     player.y = std::clamp(player.y, 175.0f, 630.0f);
+
+    if (IsKeyPressed(KEY_E)) {
+        sceneMessage = "You explored this place!";
+        messageUntil = animationTime + 2.4f;
+    }
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && InRect({1080, 24, 170, 54}, pointer)) showMap = true;
     if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_BACKSPACE)) showMap = true;
