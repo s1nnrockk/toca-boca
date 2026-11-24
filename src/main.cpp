@@ -527,7 +527,8 @@ int main(int, char**) {
         ClearBackground({225, 241, 232, 255});
         BeginMode2D(camera);
         if (showMap) DrawMap();
-        else if (insideBuilding) DrawInterior();\n        else DrawRegionScene();
+        else if (insideBuilding) DrawInterior();
+        else DrawRegionScene();
         EndMode2D();
         EndDrawing();
     }
