@@ -12,8 +12,9 @@ An unofficial, original social-life sandbox prototype inspired by the broad idea
 - Connected roads, terrain, coast, trees, clouds, and distinct region markers
 - Select a region, review its description, then enter it
 - Six distinct handcrafted region scenes: city, valley, autumn forest, snowy town, seaside, and park
-- Region scenes with a movable character
-- Mouse, keyboard, and touch-oriented controls
+- Region scenes with a movable character, animated walking, and facing direction
+- Explore action (`E`) with on-screen feedback
+- Mouse, keyboard, and touch-oriented directional-pad controls
 - Camera scaling for different desktop and mobile aspect ratios
 
 The six region names and environments are original prototype content, not a verified inventory of every Toca Life World location. The supplied YouTube page could not be fetched in this session, so its exact location list still needs visual reference screenshots.
@@ -40,5 +41,5 @@ Artifacts are attached to the completed workflow run.
 The current art is drawn procedurally in C++ and is original placeholder artwork. No proprietary Toca Boca images, sounds, animations, maps, or game files are included. Add only assets that you own or are licensed to redistribute.
 
 ## Controls
-- Desktop: WASD / arrow keys to move; click map markers to travel; click the map button to return.
-- Android: touch a map marker; use the on-screen directional pad to move.
+- Desktop: WASD / arrow keys to move, `E` to explore, click map markers to travel, and click the map button to return.
+- Android: touch a map marker; drag from the on-screen directional pad to move; use the Explore key where a hardware keyboard is available.
