@@ -30,6 +30,8 @@ const std::array<Place, 6> places{{
 int selectedPlace = -1;
 Vector2 player{640, 500};
 bool showMap = true;
+bool insideBuilding = false;
+int characterStyle = 0;
 float animationTime = 0.0f;
 float walkTime = 0.0f;
 float messageUntil = 0.0f;
@@ -211,6 +213,50 @@ const SceneProp* FindNearbyProp() {
     }
     return nullptr;
 }
+
+bool IsBuildingProp(const SceneProp* prop) {
+    if (!prop) return false;
+    const std::string label = prop->label;
+    return label == "SHOP" || label == "CAFE" || label == "HOUSE" ||
+           label == "CABIN" || label == "BAKERY" || label == "HOME";
+}
+
+void DrawInterior() {
+    const Place& place = places[(size_t)selectedPlace];
+    const Color wall = selectedPlace == 3 ? Color{205, 225, 235, 255} :
+                       selectedPlace == 2 ? Color{235, 204, 169, 255} :
+                       Color{250, 224, 190, 255};
+    DrawRectangleGradientV(0, 0, WORLD_W, WORLD_H, wall, {239, 204, 161, 255});
+    DrawRectangle(0, 500, WORLD_W, 220, {170, 125, 91, 255});
+    DrawRectangle(0, 490, WORLD_W, 18, {235, 192, 143, 255});
+    DrawRectangle(105, 105, 260, 210, {139, 195, 208, 255});
+    DrawRectangleLinesEx({105, 105, 260, 210}, 12, {255, 247, 225, 255});
+    DrawLineEx({235, 105}, {235, 315}, 9, {255, 247, 225, 255});
+    DrawLineEx({105, 210}, {365, 210}, 9, {255, 247, 225, 255});
+    DrawRectangleRounded({440, 350, 390, 135}, 0.08f, 12, {185, 126, 87, 255});
+    DrawRectangleRounded({465, 320, 340, 85}, 0.12f, 12, {247, 225, 194, 255});
+    DrawRectangleRounded({490, 295, 95, 45}, 0.2f, 10, {255, 247, 225, 255});
+    DrawRectangleRounded({680, 295, 95, 45}, 0.2f, 10, {255, 247, 225, 255});
+    DrawRectangleRounded({920, 350, 210, 135}, 0.08f, 12, {125, 165, 129, 255});
+    DrawRectangleRounded({945, 320, 160, 60}, 0.18f, 12, {202, 224, 186, 255});
+    DrawCircle(1025, 275, 42, {103, 165, 113, 255});
+    DrawRectangle(1017, 310, 16, 38, {139, 105, 76, 255});
+    DrawRectangleRounded({28, 24, 540, 88}, 0.22f, 16, paper);
+    DrawText("INSIDE", 54, 40, 30, ink);
+    DrawText(place.name, 56, 80, 16, muted);
+    DrawRectangleRounded({1080, 24, 170, 54}, 0.4f, 16, paper);
+    DrawText("GO OUTSIDE", 1092, 42, 16, ink);
+    DrawRectangleRounded({28, 650, 430, 42}, 0.35f, 12, Fade(paper, 0.92f));
+    DrawText("ESC / BACKSPACE: GO OUTSIDE", 45, 663, 16, ink);
+    DrawCircle(640, 550, 34, {240, 190, 137, 255});
+    DrawRectangleRounded({622, 570, 36, 48}, 0.35f, 10, characterStyle == 0 ? coral :
+                         characterStyle == 1 ? Color{104, 163, 204, 255} :
+                         characterStyle == 2 ? Color{133, 185, 124, 255} :
+                                               Color{185, 132, 190, 255});
+    DrawCircle(628, 546, 3, ink);
+    DrawCircle(652, 546, 3, ink);
+}
+
 void DrawCharacter() {
     const float moving = walkTime > 0.0f ? 1.0f : 0.0f;
     const float bob = moving * std::fabs(std::sin(animationTime * 12.0f)) * 3.0f;
@@ -219,7 +265,8 @@ void DrawCharacter() {
     DrawEllipse(player.x, player.y + 43, 25, 9, Fade(ink, 0.2f));
     DrawLineEx({player.x - 7, y + 30}, {player.x - 8 - legSwing, y + 45}, 7, {89, 116, 145, 255});
     DrawLineEx({player.x + 7, y + 30}, {player.x + 8 + legSwing, y + 45}, 7, {89, 116, 145, 255});
-    DrawRectangleRounded({player.x - 18, y - 2, 36, 43}, 0.35f, 10, coral);
+    const Color shirt = characterStyle == 0 ? coral : characterStyle == 1 ? Color{104,163,204,255} : characterStyle == 2 ? Color{133,185,124,255} : Color{185,132,190,255};
+    DrawRectangleRounded({player.x - 18, y - 2, 36, 43}, 0.35f, 10, shirt);
     DrawCircleV({player.x, y - 18}, 19, {246, 195, 150, 255});
     const float eyeOffset = facing >= 0 ? 1.0f : -1.0f;
     DrawCircleV({player.x - 7 + eyeOffset*2, y - 19}, 3, ink);
@@ -348,7 +395,7 @@ void DrawRegionScene() {
     DrawRectangleRounded({1080, 24, 170, 54}, 0.4f, 16, paper);
     DrawText("WORLD MAP", 1101, 42, 18, ink);
     DrawRectangleRounded({28, 650, 440, 42}, 0.35f, 12, Fade(paper, 0.92f));
-    DrawText("WASD / ARROWS: MOVE     E: INTERACT", 45, 663, 16, ink);
+    DrawText("WASD: MOVE   E: INTERACT   C: CHANGE OUTFIT", 45, 663, 16, ink);
     if (animationTime < messageUntil) {
         DrawRectangleRounded({465, 610, 350, 52}, 0.35f, 14, paper);
         DrawText(sceneMessage.c_str(), 490, 627, 19, ink);
@@ -446,7 +493,7 @@ int main(int, char**) {
         ClearBackground({225, 241, 232, 255});
         BeginMode2D(camera);
         if (showMap) DrawMap();
-        else DrawRegionScene();
+        else if (insideBuilding) DrawInterior();\n        else DrawRegionScene();
         EndMode2D();
         EndDrawing();
     }
