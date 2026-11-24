@@ -139,7 +139,7 @@ void DrawPlaceScene() {
     DrawCircleV({player.x, player.y - 17}, 19, {246, 195, 150, 255});
     DrawCircleV({player.x - 7, player.y - 19}, 3, darkInk);
     DrawCircleV({player.x + 7, player.y - 19}, 3, darkInk);
-    DrawArc((int)player.x, (int)player.y - 10, 7, 2, 10, 170, 12, darkInk);
+    DrawLineEx({player.x - 6, player.y - 8}, {player.x + 6, player.y - 8}, 2.0f, darkInk);
 
     DrawRectangleRounded({28, 24, 500, 88}, 0.25f, 16, paper);
     DrawText(p.name, 54, 40, 30, darkInk);
