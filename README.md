@@ -11,11 +11,12 @@ An unofficial, original social-life sandbox prototype inspired by the broad idea
 - Illustrated, responsive world map with six prototype regions
 - Connected roads, terrain, coast, trees, clouds, and distinct region markers
 - Select a region, review its description, then enter it
+- Six distinct handcrafted region scenes: city, valley, autumn forest, snowy town, seaside, and park
 - Region scenes with a movable character
 - Mouse, keyboard, and touch-oriented controls
 - Camera scaling for different desktop and mobile aspect ratios
 
-The six region names are prototype content, not a verified inventory of every Toca Life World location. The supplied YouTube page could not be fetched in this session, so its exact location list still needs visual reference screenshots.
+The six region names and environments are original prototype content, not a verified inventory of every Toca Life World location. The supplied YouTube page could not be fetched in this session, so its exact location list still needs visual reference screenshots.
 
 ## Build locally (Windows)
 1. Install CMake 3.24+, Visual Studio 2022 C++ workload, and Git.
