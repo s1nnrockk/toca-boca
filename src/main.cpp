@@ -5,173 +5,252 @@
 #include <string>
 
 namespace {
-constexpr int DESIGN_W = 1280;
-constexpr int DESIGN_H = 720;
+constexpr int WORLD_W = 1280;
+constexpr int WORLD_H = 720;
+constexpr float PI_F = 3.14159265358979323846f;
 
 struct Place {
     const char* name;
-    const char* subtitle;
-    Vector2 mapPos;
-    Color ground;
+    const char* description;
+    Vector2 pos;
+    Color land;
     Color accent;
-    int kind;
+    int icon;
 };
 
 const std::array<Place, 6> places{{
-    {"Sunny City", "Apartments, shops and a busy plaza", {350, 315}, {255, 220, 153, 255}, {245, 139, 91, 255}, 0},
-    {"Green Valley", "A quiet village among rolling hills", {565, 245}, {185, 224, 154, 255}, {95, 174, 111, 255}, 1},
-    {"Autumn Woods", "A forest path and cozy cabins", {770, 330}, {244, 191, 132, 255}, {194, 111, 77, 255}, 2},
-    {"Snowy Town", "A little town beneath the mountains", {970, 225}, {220, 239, 246, 255}, {116, 174, 211, 255}, 3},
-    {"Seaside", "A bright beach and a tiny harbor", {540, 500}, {255, 226, 158, 255}, {69, 174, 201, 255}, 4},
-    {"Highland Park", "Open green spaces and a lookout", {830, 515}, {194, 225, 163, 255}, {122, 170, 101, 255}, 5}
+    {"Sunny City", "Apartments, shops and a busy plaza", {310, 300}, {255, 221, 161, 255}, {237, 132, 101, 255}, 0},
+    {"Green Valley", "A quiet village among rolling hills", {535, 205}, {188, 225, 158, 255}, {105, 177, 116, 255}, 1},
+    {"Autumn Woods", "A forest path and cozy cabins", {790, 310}, {242, 194, 145, 255}, {190, 119, 78, 255}, 2},
+    {"Snowy Town", "A little town beneath the mountains", {1010, 190}, {224, 239, 247, 255}, {118, 174, 211, 255}, 3},
+    {"Seaside", "A bright beach and a tiny harbor", {520, 500}, {255, 229, 171, 255}, {75, 174, 199, 255}, 4},
+    {"Highland Park", "Open green spaces and a lookout", {850, 520}, {197, 226, 169, 255}, {123, 169, 105, 255}, 5}
 }};
 
 int selectedPlace = -1;
-Vector2 player{640, 390};
+Vector2 player{640, 500};
 bool showMap = true;
-float worldTime = 0.0f;
-float uiScale = 1.0f;
+float animationTime = 0.0f;
+Camera2D camera{};
 
-Color darkInk{55, 76, 79, 255};
-Color paper{255, 250, 237, 245};
-Color coral{244, 132, 112, 255};
-Color mint{125, 198, 161, 255};
+const Color ink{55, 76, 79, 255};
+const Color muted{105, 130, 126, 255};
+const Color paper{255, 251, 240, 248};
+const Color coral{244, 132, 112, 255};
+const Color mint{125, 198, 161, 255};
 
-Rectangle FitRect(float x, float y, float w, float h) {
-    return {x * uiScale, y * uiScale, w * uiScale, h * uiScale};
+void UpdateCamera() {
+    const float scale = std::min((float)GetScreenWidth() / WORLD_W,
+                                 (float)GetScreenHeight() / WORLD_H);
+    camera.target = {WORLD_W * 0.5f, WORLD_H * 0.5f};
+    camera.offset = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
+    camera.rotation = 0.0f;
+    camera.zoom = scale;
 }
 
-Vector2 PointerPosition() {
-    return GetMousePosition();
+Vector2 WorldPointer() {
+    return GetScreenToWorld2D(GetMousePosition(), camera);
 }
 
-bool PointerPressed() {
-    return IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-}
-
-bool Hit(Rectangle r, Vector2 p) {
+bool InRect(Rectangle r, Vector2 p) {
     return CheckCollisionPointRec(p, r);
 }
 
-void DrawCloud(float x, float y, float s) {
-    DrawCircleV({x, y}, 20*s, Fade(WHITE, 0.88f));
-    DrawCircleV({x + 22*s, y - 9*s}, 25*s, Fade(WHITE, 0.92f));
-    DrawCircleV({x + 48*s, y}, 19*s, Fade(WHITE, 0.88f));
-    DrawRectangleRec({x - 2*s, y, 52*s, 17*s}, Fade(WHITE, 0.9f));
+void Cloud(float x, float y, float s) {
+    DrawCircleV({x, y}, 18*s, Fade(WHITE, 0.9f));
+    DrawCircleV({x + 22*s, y - 8*s}, 24*s, Fade(WHITE, 0.94f));
+    DrawCircleV({x + 47*s, y}, 18*s, Fade(WHITE, 0.9f));
+    DrawRectangleRec({x - 2*s, y, 51*s, 16*s}, Fade(WHITE, 0.92f));
+}
+
+void Tree(float x, float y, float s, Color leaves) {
+    DrawRectangle((int)(x - 4*s), (int)(y + 8*s), (int)(8*s), (int)(22*s), {139, 105, 76, 255});
+    DrawCircle((int)x, (int)y, 17*s, leaves);
+    DrawCircle((int)(x - 9*s), (int)(y + 5*s), 11*s, Fade(leaves, 0.95f));
+    DrawCircle((int)(x + 9*s), (int)(y + 6*s), 11*s, Fade(leaves, 0.95f));
+}
+
+void DrawMapBackground() {
+    DrawRectangleGradientV(0, 0, WORLD_W, WORLD_H,
+                           {155, 218, 231, 255}, {225, 241, 207, 255});
+    Cloud(120, 132, 1.05f);
+    Cloud(910, 110, 0.78f);
+    Cloud(1110, 410, 0.72f);
+
+    DrawEllipse(635, 370, 540, 245, {180, 220, 157, 255});
+    DrawEllipse(235, 425, 250, 175, {197, 228, 165, 255});
+    DrawEllipse(1050, 390, 260, 190, {173, 216, 153, 255});
+    DrawEllipse(680, 565, 380, 115, {200, 228, 166, 255});
+    DrawEllipse(470, 145, 230, 95, {199, 229, 169, 255});
+
+    // Coastline and water.
+    DrawEllipse(1050, 610, 310, 115, {111, 196, 211, 255});
+    DrawEllipse(1080, 610, 245, 72, {137, 210, 218, 255});
+    DrawEllipse(1050, 610, 190, 42, {245, 226, 177, 255});
+
+    // Connected roads make the world map readable as one place.
+    const Color road{248, 239, 207, 255};
+    const Color roadEdge{225, 207, 166, 255};
+    const std::array<Vector2, 7> route{{
+        {145, 365}, {310, 300}, {535, 205}, {790, 310},
+        {1010, 190}, {850, 520}, {520, 500}
+    }};
+    for (size_t i = 0; i + 1 < route.size(); ++i) {
+        DrawLineEx(route[i], route[i + 1], 43, road);
+        DrawLineEx(route[i], route[i + 1], 2.5f, roadEdge);
+    }
+    DrawLineEx({520, 500}, {310, 300}, 37, road);
+    DrawLineEx({520, 500}, {310, 300}, 2.5f, roadEdge);
+
+    for (int i = 0; i < 27; ++i) {
+        const float x = 42.0f + i * 45.0f;
+        const float y = 640.0f + std::sin(i * 0.72f) * 17.0f;
+        Tree(x, y, 0.52f + (i % 3) * 0.08f, {116, 184, 113, 255});
+    }
+    Tree(165, 220, 0.9f, {105, 177, 111, 255});
+    Tree(710, 120, 0.8f, {105, 177, 111, 255});
+    Tree(1160, 300, 0.9f, {105, 177, 111, 255});
+    Tree(930, 600, 0.75f, {105, 177, 111, 255});
+}
+
+void DrawPlaceIcon(const Place& p, bool active) {
+    const Vector2 c = p.pos;
+    const float pulse = active ? 3.0f + std::sin(animationTime * 4.0f) * 2.0f : 0.0f;
+    DrawCircleV(c, 42 + pulse, Fade(WHITE, 0.5f));
+    DrawCircleV(c, 35 + pulse, WHITE);
+    DrawCircleV(c, 29, p.accent);
+
+    // A distinct simple pictogram for each original region marker.
+    switch (p.icon) {
+        case 0: // city
+            DrawRectangle((int)c.x - 14, (int)c.y - 9, 10, 23, paper);
+            DrawRectangle((int)c.x - 2, (int)c.y - 17, 13, 31, paper);
+            DrawRectangle((int)c.x + 13, (int)c.y - 4, 8, 18, paper);
+            break;
+        case 1: // valley
+            DrawTriangle({c.x - 21, c.y + 12}, {c.x - 2, c.y - 15}, {c.x + 16, c.y + 12}, paper, paper, paper);
+            DrawTriangle({c.x - 5, c.y + 12}, {c.x + 13, c.y - 11}, {c.x + 27, c.y + 12}, Fade(WHITE, 0.8f), Fade(WHITE, 0.8f), Fade(WHITE, 0.8f));
+            break;
+        case 2: // woods
+            DrawTriangle({c.x, c.y - 20}, {c.x - 20, c.y + 10}, {c.x + 20, c.y + 10}, paper, paper, paper);
+            DrawRectangle((int)c.x - 4, (int)c.y + 7, 8, 13, {139, 105, 76, 255});
+            break;
+        case 3: // snow
+            DrawLineEx({c.x - 17, c.y}, {c.x + 17, c.y}, 4, paper);
+            DrawLineEx({c.x, c.y - 17}, {c.x, c.y + 17}, 4, paper);
+            DrawLineEx({c.x - 12, c.y - 12}, {c.x + 12, c.y + 12}, 3, paper);
+            DrawLineEx({c.x - 12, c.y + 12}, {c.x + 12, c.y - 12}, 3, paper);
+            break;
+        case 4: // seaside
+            DrawCircleV({c.x - 7, c.y - 7}, 10, paper);
+            DrawLineEx({c.x - 19, c.y + 8}, {c.x + 19, c.y + 8}, 4, paper);
+            DrawLineEx({c.x - 13, c.y + 16}, {c.x + 13, c.y + 16}, 3, paper);
+            break;
+        default: // park
+            DrawCircleV({c.x, c.y - 5}, 13, paper);
+            DrawRectangle((int)c.x - 4, (int)c.y + 5, 8, 16, {139, 105, 76, 255});
+            break;
+    }
+
+    DrawRectangleRounded({c.x - 82, c.y + 48, 164, 34}, 0.5f, 12, paper);
+    DrawText(p.name, (int)c.x - MeasureText(p.name, 16)/2, (int)c.y + 57, 16, ink);
+    if (active) DrawCircleLines((int)c.x, (int)c.y, 46 + pulse, coral);
 }
 
 void DrawMap() {
-    DrawRectangleGradientV(0, 0, GetScreenWidth(), GetScreenHeight(),
-                           {155, 218, 231, 255}, {224, 241, 205, 255});
-    DrawCloud(100, 105, 1.2f);
-    DrawCloud(930, 110, 0.85f);
-    DrawCloud(1080, 390, 0.7f);
+    DrawMapBackground();
 
-    // Soft rolling landscape, drawn procedurally so the project has no ripped game art.
-    DrawEllipse(650, 390, 520, 230, {178, 220, 157, 255});
-    DrawEllipse(260, 420, 230, 160, {196, 228, 164, 255});
-    DrawEllipse(1040, 410, 250, 180, {170, 215, 151, 255});
-    DrawEllipse(690, 555, 360, 110, {198, 226, 160, 255});
+    DrawRectangleRounded({28, 22, 430, 88}, 0.22f, 18, paper);
+    DrawText("POCKET PLACES", 54, 38, 30, ink);
+    DrawText("WORLD MAP  /  EXPLORE", 56, 77, 16, muted);
 
-    // Winding road.
-    DrawLineEx({160, 380}, {390, 330}, 54, {248, 239, 207, 255});
-    DrawLineEx({390, 330}, {640, 380}, 54, {248, 239, 207, 255});
-    DrawLineEx({640, 380}, {890, 315}, 54, {248, 239, 207, 255});
-    DrawLineEx({890, 315}, {1090, 360}, 54, {248, 239, 207, 255});
-    DrawLineEx({640, 380}, {620, 550}, 48, {248, 239, 207, 255});
-    DrawLineEx({620, 550}, {850, 555}, 48, {248, 239, 207, 255});
-    DrawLineEx({160, 380}, {390, 330}, 3, {224, 205, 162, 255});
-    DrawLineEx({390, 330}, {640, 380}, 3, {224, 205, 162, 255});
-    DrawLineEx({640, 380}, {890, 315}, 3, {224, 205, 162, 255});
-    DrawLineEx({890, 315}, {1090, 360}, 3, {224, 205, 162, 255});
+    for (size_t i = 0; i < places.size(); ++i)
+        DrawPlaceIcon(places[i], selectedPlace == (int)i);
 
-    for (int i = 0; i < 22; ++i) {
-        const float x = 55.0f + (i * 53.0f);
-        const float y = 610.0f + std::sin(i * 0.8f) * 25.0f;
-        DrawCircle((int)x, (int)y, 8, {116, 184, 113, 255});
-        DrawCircle((int)(x - 5), (int)(y - 7), 7, {133, 197, 126, 255});
+    DrawRectangleRounded({930, 24, 320, 54}, 0.4f, 16, paper);
+    DrawText("6 REGIONS", 955, 42, 19, ink);
+    DrawText("Tap a marker to visit", 40, 675, 18, ink);
+
+    if (selectedPlace >= 0) {
+        const Place& p = places[(size_t)selectedPlace];
+        DrawRectangleRounded({28, 530, 400, 132}, 0.12f, 18, paper);
+        DrawRectangleRounded({42, 544, 9, 104}, 0.5f, 6, p.accent);
+        DrawText("SELECTED LOCATION", 66, 548, 14, muted);
+        DrawText(p.name, 66, 571, 25, ink);
+        DrawText(p.description, 66, 608, 16, muted);
+        DrawRectangleRounded({290, 615, 116, 34}, 0.5f, 12, p.accent);
+        DrawText("VISIT", 325, 624, 16, WHITE);
     }
-
-    DrawRectangleRounded({34, 24, 410, 86}, 0.28f, 18, paper);
-    DrawText("POCKET PLACES", 60, 40, 30, darkInk);
-    DrawText("A little world to explore", 62, 77, 17, {108, 132, 126, 255});
-
-    for (size_t i = 0; i < places.size(); ++i) {
-        const Place& p = places[i];
-        const Vector2 c = p.mapPos;
-        const bool active = selectedPlace == (int)i;
-        DrawCircleV(c, active ? 47 : 40, Fade(WHITE, 0.94f));
-        DrawCircleV(c, active ? 39 : 33, p.accent);
-        DrawCircleV({c.x - 9, c.y - 8}, 11, Fade(WHITE, 0.7f));
-        DrawCircleV({c.x + 10, c.y + 7}, 8, Fade(darkInk, 0.13f));
-        DrawRectangleRounded({c.x - 77, c.y + 45, 154, 35}, 0.5f, 12, paper);
-        DrawText(p.name, (int)c.x - MeasureText(p.name, 16)/2, (int)c.y + 54, 16, darkInk);
-        if (active) DrawCircleLines((int)c.x, (int)c.y, 49, coral);
-    }
-
-    DrawRectangleRounded({GetScreenWidth() - 300.0f, 24, 266, 52}, 0.45f, 16, paper);
-    DrawText("6 places to discover", GetScreenWidth() - 270, 41, 19, darkInk);
-    DrawText("Choose a place on the map", 38, GetScreenHeight() - 42, 18, darkInk);
 }
 
-void DrawPlaceScene() {
-    const Place& p = places[(size_t)selectedPlace];
-    DrawRectangleGradientV(0, 0, GetScreenWidth(), GetScreenHeight(),
-                           {166, 220, 232, 255}, p.ground);
-    DrawCircle(1070, 100, 48, {255, 224, 133, 255});
-    DrawEllipse(640, 570, 700, 170, Fade(p.accent, 0.42f));
+void DrawCharacter() {
+    DrawEllipse(player.x, player.y + 43, 25, 9, Fade(ink, 0.2f));
+    DrawRectangleRounded({player.x - 18, player.y - 2, 36, 43}, 0.35f, 10, coral);
+    DrawCircleV({player.x, player.y - 18}, 19, {246, 195, 150, 255});
+    DrawCircleV({player.x - 7, player.y - 19}, 3, ink);
+    DrawCircleV({player.x + 7, player.y - 19}, 3, ink);
+    DrawLineEx({player.x - 6, player.y - 8}, {player.x + 6, player.y - 8}, 2, ink);
+}
 
-    // Three cheerful, original buildings.
-    for (int i = 0; i < 3; ++i) {
-        const float x = 260.0f + i * 260.0f;
-        const float h = 150.0f + (i % 2) * 55.0f;
-        DrawRectangleRounded({x, 390.0f - h, 190, h}, 0.08f, 8, i == 1 ? p.accent : paper);
-        DrawTriangle({x - 12, 390.0f - h, x + 95, 320.0f - h, x + 202, 390.0f - h}, darkInk, darkInk);
-        for (int w = 0; w < 3; ++w) {
-            DrawRectangleRounded({x + 22 + w*55.0f, 415.0f - h, 34, 42}, 0.12f, 5, {145, 205, 213, 255});
-        }
-        DrawRectangle({x + 75, 350, 42, 80}, {145, 102, 79, 255});
+void DrawRegionScene() {
+    const Place& p = places[(size_t)selectedPlace];
+    DrawRectangleGradientV(0, 0, WORLD_W, WORLD_H, {166, 220, 232, 255}, p.land);
+    DrawCircle(1080, 105, 48, {255, 224, 133, 255});
+    DrawEllipse(640, 590, 740, 180, Fade(p.accent, 0.42f));
+
+    // Original generic village backdrop, recolored for each selected region.
+    for (int i = 0; i < 4; ++i) {
+        const float x = 115.0f + i * 285.0f;
+        const float h = 140.0f + (i % 2) * 48.0f;
+        DrawRectangleRounded({x, 390.0f - h, 205, h}, 0.06f, 8, i == 1 ? p.accent : paper);
+        DrawTriangle({x - 12, 390.0f - h}, {x + 102, 320.0f - h}, {x + 217, 390.0f - h}, ink, ink, ink);
+        for (int w = 0; w < 3; ++w)
+            DrawRectangleRounded({x + 22 + w*60.0f, 415.0f - h, 37, 43}, 0.12f, 5, {145, 205, 213, 255});
+        DrawRectangle((int)x + 82, 350, 42, 80, {145, 102, 79, 255});
     }
 
-    // Character.
-    DrawEllipse(player.x, player.y + 42, 25, 9, Fade(darkInk, 0.2f));
-    DrawRectangleRounded({player.x - 18, player.y - 2, 36, 43}, 0.35f, 10, coral);
-    DrawCircleV({player.x, player.y - 17}, 19, {246, 195, 150, 255});
-    DrawCircleV({player.x - 7, player.y - 19}, 3, darkInk);
-    DrawCircleV({player.x + 7, player.y - 19}, 3, darkInk);
-    DrawLineEx({player.x - 6, player.y - 8}, {player.x + 6, player.y - 8}, 2.0f, darkInk);
+    DrawCharacter();
 
-    DrawRectangleRounded({28, 24, 500, 88}, 0.25f, 16, paper);
-    DrawText(p.name, 54, 40, 30, darkInk);
-    DrawText(p.subtitle, 56, 80, 17, {108, 132, 126, 255});
+    DrawRectangleRounded({28, 24, 510, 88}, 0.22f, 16, paper);
+    DrawText(p.name, 54, 40, 30, ink);
+    DrawText(p.description, 56, 80, 16, muted);
+    DrawRectangleRounded({1080, 24, 170, 54}, 0.4f, 16, paper);
+    DrawText("WORLD MAP", 1101, 42, 18, ink);
 
-    DrawRectangleRounded({GetScreenWidth() - 190.0f, 24, 160, 54}, 0.4f, 16, paper);
-    DrawText("WORLD MAP", GetScreenWidth() - 168, 42, 18, darkInk);
-
-    // Mobile-friendly directional pad; desktop can also use WASD/arrow keys.
-    const float padX = GetScreenWidth() - 120.0f;
-    const float padY = GetScreenHeight() - 116.0f;
+    const float padX = 1130.0f, padY = 565.0f;
     DrawCircleV({padX, padY}, 72, Fade(paper, 0.75f));
     DrawCircleV({padX, padY}, 27, Fade(mint, 0.9f));
-    DrawTriangle({padX, padY - 58}, {padX - 14, padY - 34}, {padX + 14, padY - 34}, darkInk);
-    DrawTriangle({padX, padY + 58}, {padX - 14, padY + 34}, {padX + 14, padY + 34}, darkInk);
-    DrawTriangle({padX - 58, padY}, {padX - 34, padY - 14}, {padX - 34, padY + 14}, darkInk);
-    DrawTriangle({padX + 58, padY}, {padX + 34, padY - 14}, {padX + 34, padY + 14}, darkInk);
+    DrawTriangle({padX, padY - 58}, {padX - 14, padY - 34}, {padX + 14, padY - 34}, ink, ink, ink);
+    DrawTriangle({padX, padY + 58}, {padX - 14, padY + 34}, {padX + 14, padY + 34}, ink, ink, ink);
+    DrawTriangle({padX - 58, padY}, {padX - 34, padY - 14}, {padX - 34, padY + 14}, ink, ink, ink);
+    DrawTriangle({padX + 58, padY}, {padX + 34, padY - 14}, {padX + 34, padY + 14}, ink, ink, ink);
 }
 
 void UpdateGame(float dt) {
+    animationTime += dt;
+    UpdateCamera();
+    const Vector2 pointer = WorldPointer();
+
     if (showMap) {
-        if (PointerPressed()) {
-            const Vector2 m = PointerPosition();
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             for (size_t i = 0; i < places.size(); ++i) {
-                if (CheckCollisionPointCircle(m, places[i].mapPos, 48.0f)) {
+                const Vector2 p = places[i].pos;
+                if (CheckCollisionPointCircle(pointer, p, 48)) {
                     selectedPlace = (int)i;
-                    showMap = false;
-                    player = {640, 490};
                     break;
                 }
             }
+            if (selectedPlace >= 0 && InRect({290, 615, 116, 34}, pointer)) {
+                showMap = false;
+                player = {640, 500};
+            }
         }
+        if (IsKeyPressed(KEY_ENTER) && selectedPlace >= 0) {
+            showMap = false;
+            player = {640, 500};
+        }
+        if (IsKeyPressed(KEY_RIGHT)) selectedPlace = (selectedPlace + 1) % (int)places.size();
+        if (IsKeyPressed(KEY_LEFT)) selectedPlace = (selectedPlace <= 0) ? (int)places.size() - 1 : selectedPlace - 1;
         return;
     }
 
@@ -181,36 +260,36 @@ void UpdateGame(float dt) {
     if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)) player.y -= speed;
     if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) player.y += speed;
 
-    const Vector2 m = PointerPosition();
-    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && m.x > GetScreenWidth() - 220 && m.y > GetScreenHeight() - 220) {
-        const float dx = m.x - (GetScreenWidth() - 120.0f);
-        const float dy = m.y - (GetScreenHeight() - 116.0f);
-        if (std::fabs(dx) > std::fabs(dy)) player.x += (dx > 0 ? speed : -speed);
-        else player.y += (dy > 0 ? speed : -speed);
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && pointer.x > 1035 && pointer.y > 470) {
+        const float dx = pointer.x - 1130;
+        const float dy = pointer.y - 565;
+        if (std::fabs(dx) > std::fabs(dy)) player.x += dx > 0 ? speed : -speed;
+        else player.y += dy > 0 ? speed : -speed;
     }
 
-    player.x = std::clamp(player.x, 70.0f, (float)GetScreenWidth() - 70.0f);
-    player.y = std::clamp(player.y, 190.0f, (float)GetScreenHeight() - 85.0f);
+    player.x = std::clamp(player.x, 55.0f, 1225.0f);
+    player.y = std::clamp(player.y, 175.0f, 630.0f);
 
-    if (PointerPressed() && Hit({GetScreenWidth() - 190.0f, 24, 160, 54}, m)) showMap = true;
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && InRect({1080, 24, 170, 54}, pointer)) showMap = true;
     if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_BACKSPACE)) showMap = true;
 }
 }
 
 int main(int, char**) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT);
-    InitWindow(DESIGN_W, DESIGN_H, "Pocket Places");
+    InitWindow(WORLD_W, WORLD_H, "Pocket Places");
     SetTargetFPS(60);
 
     while (!WindowShouldClose()) {
         const float dt = std::min(GetFrameTime(), 0.04f);
-        worldTime += dt;
         UpdateGame(dt);
 
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground({225, 241, 232, 255});
+        BeginMode2D(camera);
         if (showMap) DrawMap();
-        else DrawPlaceScene();
+        else DrawRegionScene();
+        EndMode2D();
         EndDrawing();
     }
 
