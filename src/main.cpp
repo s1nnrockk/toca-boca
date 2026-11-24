@@ -338,8 +338,8 @@ void DrawRegionScene() {
     DrawSceneProps();
     DrawCharacter();
     if (FindNearbyProp()) {
-        DrawRectangleRounded({480, 555, 320, 42}, 0.35f, 12, paper);
-        DrawText("E  INTERACT", 570, 568, 18, ink);
+        DrawRectangleRounded({555, 610, 170, 42}, 0.35f, 12, coral);
+        DrawText("E  INTERACT", 580, 623, 17, WHITE);
     }
 
     DrawRectangleRounded({28, 24, 510, 88}, 0.22f, 16, paper);
@@ -422,7 +422,7 @@ void UpdateGame(float dt) {
     player.x = std::clamp(player.x, 55.0f, 1225.0f);
     player.y = std::clamp(player.y, 175.0f, 630.0f);
 
-    if (IsKeyPressed(KEY_E)) {
+    if (IsKeyPressed(KEY_E) || (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && InRect({555, 610, 170, 42}, pointer))) {
         if (const SceneProp* prop = FindNearbyProp()) sceneMessage = prop->message;
         else sceneMessage = "Walk closer to an object to interact!";
         messageUntil = animationTime + 2.8f;
