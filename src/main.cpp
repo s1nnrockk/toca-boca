@@ -132,7 +132,7 @@ void DrawPlaceIcon(const Place& p, bool active) {
             DrawTriangle({c.x - 5, c.y + 12}, {c.x + 13, c.y - 11}, {c.x + 27, c.y + 12}, Fade(WHITE, 0.8f));
             break;
         case 2: // woods
-            DrawTriangle({c.x, c.y - 20}, {c.x - 20, c.y + 10}, {c.x + 20, c.y + 10}, paper, paper, paper);
+            DrawTriangle({c.x, c.y - 20}, {c.x - 20, c.y + 10}, {c.x + 20, c.y + 10}, paper);
             DrawRectangle((int)c.x - 4, (int)c.y + 7, 8, 13, {139, 105, 76, 255});
             break;
         case 3: // snow
@@ -196,17 +196,108 @@ void DrawRegionScene() {
     const Place& p = places[(size_t)selectedPlace];
     DrawRectangleGradientV(0, 0, WORLD_W, WORLD_H, {166, 220, 232, 255}, p.land);
     DrawCircle(1080, 105, 48, {255, 224, 133, 255});
-    DrawEllipse(640, 590, 740, 180, Fade(p.accent, 0.42f));
 
-    // Original generic village backdrop, recolored for each selected region.
-    for (int i = 0; i < 4; ++i) {
-        const float x = 115.0f + i * 285.0f;
-        const float h = 140.0f + (i % 2) * 48.0f;
-        DrawRectangleRounded({x, 390.0f - h, 205, h}, 0.06f, 8, i == 1 ? p.accent : paper);
-        DrawTriangle({x - 12, 390.0f - h}, {x + 102, 320.0f - h}, {x + 217, 390.0f - h}, ink);
-        for (int w = 0; w < 3; ++w)
-            DrawRectangleRounded({x + 22 + w*60.0f, 415.0f - h, 37, 43}, 0.12f, 5, {145, 205, 213, 255});
-        DrawRectangle((int)x + 82, 350, 42, 80, {145, 102, 79, 255});
+    // Every region now has its own recognizable outdoor layout and landmarks.
+    switch (p.icon) {
+        case 0: { // Sunny City
+            DrawRectangle(0, 430, WORLD_W, 290, {231, 202, 159, 255});
+            DrawRectangle(0, 485, WORLD_W, 235, {190, 190, 177, 255});
+            DrawRectangle(0, 570, WORLD_W, 150, {117, 157, 151, 255});
+            for (int i = 0; i < 5; ++i) {
+                const int x = 55 + i * 245;
+                const int h = 170 + (i % 3) * 55;
+                DrawRectangle(x, 430 - h, 190, h, i % 2 ? Color{248, 184, 135, 255} : Color{244, 218, 166, 255});
+                DrawRectangle(x - 8, 430 - h - 12, 206, 16, {210, 133, 105, 255});
+                for (int row = 0; row < 3; ++row)
+                    for (int col = 0; col < 3; ++col)
+                        DrawRectangle(x + 22 + col * 53, 430 - h + 25 + row * 47, 27, 31, {130, 190, 204, 255});
+            }
+            DrawRectangle(470, 370, 300, 155, {246, 145, 113, 255});
+            DrawRectangle(455, 355, 330, 22, {255, 222, 169, 255});
+            DrawText("CAFE", 575, 415, 30, WHITE);
+            break;
+        }
+        case 1: { // Green Valley
+            DrawEllipse(300, 445, 390, 210, {137, 194, 125, 255});
+            DrawEllipse(770, 440, 470, 235, {117, 181, 112, 255});
+            DrawEllipse(1050, 515, 220, 110, {119, 193, 207, 255});
+            DrawTriangle({115, 410}, {330, 180}, {550, 410}, {142, 188, 135, 255});
+            DrawTriangle({520, 420}, {770, 215}, {1000, 420}, {158, 202, 145, 255});
+            for (int i = 0; i < 4; ++i) {
+                const int x = 145 + i * 265;
+                DrawRectangle(x, 360, 145, 115, {244, 218, 169, 255});
+                DrawTriangle({x - 12, 360}, {x + 72, 285}, {x + 157, 360}, {190, 119, 94, 255});
+                DrawRectangle(x + 55, 400, 34, 75, {139, 98, 75, 255});
+                Tree((float)x + 190, 430, 0.9f, {91, 158, 97, 255});
+            }
+            break;
+        }
+        case 2: { // Autumn Woods
+            DrawRectangle(0, 420, WORLD_W, 300, {196, 143, 94, 255});
+            DrawTriangle({0, 450}, {240, 170}, {470, 450}, {112, 151, 108, 255});
+            DrawTriangle({430, 450}, {710, 130}, {1010, 450}, {121, 160, 111, 255});
+            DrawTriangle({850, 450}, {1080, 210}, {1280, 450}, {102, 146, 105, 255});
+            for (int i = 0; i < 12; ++i) {
+                const float x = 45.0f + i * 108.0f;
+                const float y = 390.0f + (i % 3) * 25.0f;
+                Tree(x, y, 1.2f + (i % 2) * 0.25f,
+                     i % 3 == 0 ? Color{211, 115, 69, 255} : Color{226, 160, 78, 255});
+            }
+            DrawRectangle(515, 355, 245, 150, {211, 151, 105, 255});
+            DrawTriangle({495, 360}, {637, 245}, {780, 360}, {110, 83, 68, 255});
+            DrawRectangle(615, 410, 48, 95, {112, 79, 63, 255});
+            DrawRectangle(548, 390, 42, 42, {135, 195, 207, 255});
+            DrawRectangle(690, 390, 42, 42, {135, 195, 207, 255});
+            break;
+        }
+        case 3: { // Snowy Town
+            DrawRectangle(0, 420, WORLD_W, 300, {239, 246, 249, 255});
+            DrawTriangle({-80, 430}, {245, 105}, {580, 430}, {172, 203, 218, 255});
+            DrawTriangle({420, 430}, {790, 75}, {1170, 430}, {188, 214, 225, 255});
+            DrawTriangle({145, 220}, {245, 105}, {340, 220}, WHITE);
+            DrawTriangle({690, 170}, {790, 75}, {890, 170}, WHITE);
+            for (int i = 0; i < 5; ++i) {
+                const int x = 75 + i * 240;
+                DrawRectangle(x, 340, 170, 125, {173, 207, 222, 255});
+                DrawTriangle({x - 14, 342}, {x + 85, 255}, {x + 184, 342}, {105, 146, 174, 255});
+                DrawRectangle(x + 68, 390, 36, 75, {133, 98, 81, 255});
+                DrawRectangle(x + 20, 365, 35, 34, {123, 183, 201, 255});
+                Tree((float)x + 205, 430, 0.95f, {75, 133, 122, 255});
+            }
+            break;
+        }
+        case 4: { // Seaside
+            DrawRectangle(0, 390, WORLD_W, 330, {103, 194, 211, 255});
+            DrawRectangle(0, 390, WORLD_W, 105, {250, 222, 163, 255});
+            DrawEllipse(270, 525, 330, 125, {255, 231, 180, 255});
+            for (int i = 0; i < 5; ++i) {
+                const int x = 110 + i * 250;
+                DrawLineEx({(float)x, 430.0f}, {(float)x + 40, 560.0f}, 5, {135, 99, 74, 255});
+                DrawTriangle({(float)x - 50, 430}, {(float)x + 40, 360}, {(float)x + 105, 430},
+                             i % 2 ? Color{245, 139, 119, 255} : Color{250, 240, 211, 255});
+            }
+            DrawTriangle({760, 495}, {900, 495}, {835, 390}, {255, 250, 232, 255});
+            DrawLineEx({835, 385}, {835, 530}, 6, {125, 91, 70, 255});
+            DrawRectangle(795, 530, 85, 12, {132, 94, 72, 255});
+            for (int i = 0; i < 7; ++i)
+                DrawLineEx({(float)(i * 190), 585.0f + (i % 2) * 35.0f},
+                           {(float)(i * 190 + 90), 585.0f + (i % 2) * 35.0f}, 3, Fade(WHITE, 0.65f));
+            break;
+        }
+        default: { // Highland Park
+            DrawRectangle(0, 425, WORLD_W, 295, {160, 205, 139, 255});
+            DrawEllipse(680, 555, 250, 95, {106, 188, 202, 255});
+            for (int i = 0; i < 11; ++i) {
+                const float x = 45.0f + i * 118.0f;
+                Tree(x, 420.0f + (i % 3) * 30.0f, 1.0f + (i % 2) * 0.25f, {83, 157, 99, 255});
+            }
+            DrawRectangle(500, 310, 280, 18, {133, 95, 72, 255});
+            DrawRectangle(520, 328, 12, 120, {133, 95, 72, 255});
+            DrawRectangle(748, 328, 12, 120, {133, 95, 72, 255});
+            DrawTriangle({480, 310}, {640, 215}, {800, 310}, {226, 160, 103, 255});
+            DrawRectangle(560, 375, 160, 15, {133, 95, 72, 255});
+            break;
+        }
     }
 
     DrawCharacter();
@@ -220,12 +311,11 @@ void DrawRegionScene() {
     const float padX = 1130.0f, padY = 565.0f;
     DrawCircleV({padX, padY}, 72, Fade(paper, 0.75f));
     DrawCircleV({padX, padY}, 27, Fade(mint, 0.9f));
-    DrawTriangle({padX, padY - 58}, {padX - 14, padY - 34}, {padX + 14, padY - 34}, ink, ink, ink);
-    DrawTriangle({padX, padY + 58}, {padX - 14, padY + 34}, {padX + 14, padY + 34}, ink, ink, ink);
-    DrawTriangle({padX - 58, padY}, {padX - 34, padY - 14}, {padX - 34, padY + 14}, ink, ink, ink);
-    DrawTriangle({padX + 58, padY}, {padX + 34, padY - 14}, {padX + 34, padY + 14}, ink, ink, ink);
+    DrawTriangle({padX, padY - 58}, {padX - 14, padY - 34}, {padX + 14, padY - 34}, ink);
+    DrawTriangle({padX, padY + 58}, {padX - 14, padY + 34}, {padX + 14, padY + 34}, ink);
+    DrawTriangle({padX - 58, padY}, {padX - 34, padY - 14}, {padX - 34, padY + 14}, ink);
+    DrawTriangle({padX + 58, padY}, {padX + 34, padY - 14}, {padX + 34, padY + 14}, ink);
 }
-
 void UpdateGame(float dt) {
     animationTime += dt;
     UpdateCamera();
