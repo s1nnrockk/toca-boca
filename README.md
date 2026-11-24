@@ -8,11 +8,14 @@ An unofficial, original social-life sandbox prototype inspired by the broad idea
 - GitHub Actions workflows build both targets and upload artifacts
 
 ## Current playable foundation
-- Illustrated world map with six selectable regions
+- Illustrated, responsive world map with six prototype regions
+- Connected roads, terrain, coast, trees, clouds, and distinct region markers
+- Select a region, review its description, then enter it
 - Region scenes with a movable character
-- Mouse and touch input
-- Location switching and a simple character/item interaction loop
-- Responsive UI for desktop and mobile aspect ratios
+- Mouse, keyboard, and touch-oriented controls
+- Camera scaling for different desktop and mobile aspect ratios
+
+The six region names are prototype content, not a verified inventory of every Toca Life World location. The supplied YouTube page could not be fetched in this session, so its exact location list still needs visual reference screenshots.
 
 ## Build locally (Windows)
 1. Install CMake 3.24+, Visual Studio 2022 C++ workload, and Git.
