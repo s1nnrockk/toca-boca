@@ -128,8 +128,8 @@ void DrawPlaceIcon(const Place& p, bool active) {
             DrawRectangle((int)c.x + 13, (int)c.y - 4, 8, 18, paper);
             break;
         case 1: // valley
-            DrawTriangle({c.x - 21, c.y + 12}, {c.x - 2, c.y - 15}, {c.x + 16, c.y + 12}, paper, paper, paper);
-            DrawTriangle({c.x - 5, c.y + 12}, {c.x + 13, c.y - 11}, {c.x + 27, c.y + 12}, Fade(WHITE, 0.8f), Fade(WHITE, 0.8f), Fade(WHITE, 0.8f));
+            DrawTriangle({c.x - 21, c.y + 12}, {c.x - 2, c.y - 15}, {c.x + 16, c.y + 12}, paper);
+            DrawTriangle({c.x - 5, c.y + 12}, {c.x + 13, c.y - 11}, {c.x + 27, c.y + 12}, Fade(WHITE, 0.8f));
             break;
         case 2: // woods
             DrawTriangle({c.x, c.y - 20}, {c.x - 20, c.y + 10}, {c.x + 20, c.y + 10}, paper, paper, paper);
@@ -203,7 +203,7 @@ void DrawRegionScene() {
         const float x = 115.0f + i * 285.0f;
         const float h = 140.0f + (i % 2) * 48.0f;
         DrawRectangleRounded({x, 390.0f - h, 205, h}, 0.06f, 8, i == 1 ? p.accent : paper);
-        DrawTriangle({x - 12, 390.0f - h}, {x + 102, 320.0f - h}, {x + 217, 390.0f - h}, ink, ink, ink);
+        DrawTriangle({x - 12, 390.0f - h}, {x + 102, 320.0f - h}, {x + 217, 390.0f - h}, ink);
         for (int w = 0; w < 3; ++w)
             DrawRectangleRounded({x + 22 + w*60.0f, 415.0f - h, 37, 43}, 0.12f, 5, {145, 205, 213, 255});
         DrawRectangle((int)x + 82, 350, 42, 80, {145, 102, 79, 255});
