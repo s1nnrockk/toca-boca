@@ -24,7 +24,7 @@ An unofficial, original social-life sandbox prototype inspired by the broad idea
 The six region names and environments are original prototype content, not a verified inventory of every Toca Life World location. The supplied YouTube page could not be fetched in this session, so its exact location list still needs visual reference screenshots.
 
 ## Build locally (Windows)
-1. Install CMake 3.24+, Visual Studio 2022 C++ workload, and Git.
+1. Install CMake 3.22.1+, Visual Studio 2022 C++ workload, and Git.
 2. Run:
    ```powershell
    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
