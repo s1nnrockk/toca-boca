@@ -187,6 +187,30 @@ void DrawMap() {
     }
 }
 
+struct SceneProp { Vector2 position; const char* label; const char* message; Color color; };
+const std::array<std::array<SceneProp, 3>, 6> sceneProps{{
+    {{{{255,485},"SHOP","The little shop is open!",{246,169,105,255}},{{640,510},"CAFE","Fresh treats at the cafe!",{226,135,111,255}},{{1040,510},"BUS","The bus is ready for a ride!",{108,166,198,255}}}},
+    {{{{210,485},"GARDEN","The village garden is growing!",{117,183,112,255}},{{640,500},"HOUSE","A cozy home in Green Valley.",{222,164,111,255}},{{1030,500},"POND","A peaceful spot by the water.",{105,185,201,255}}}},
+    {{{{250,500},"CAMP","A warm forest camp!",{218,135,83,255}},{{640,520},"CABIN","Someone lives in this cabin.",{172,117,83,255}},{{1030,500},"TREE","Autumn leaves are falling.",{209,143,75,255}}}},
+    {{{{220,500},"BAKERY","Warm bread on a snowy day!",{167,202,218,255}},{{640,500},"HOME","A snug little winter home.",{126,171,199,255}},{{1030,500},"PINE","The snow-covered pine is quiet.",{89,148,133,255}}}},
+    {{{{230,500},"UMBRELLA","A perfect beach day!",{239,139,119,255}},{{640,520},"BOAT","The boat is ready at the shore.",{102,163,190,255}},{{1030,500},"PIER","Look out over the sea!",{145,112,86,255}}}},
+    {{{{220,500},"PICNIC","Time for a picnic!",{225,157,105,255}},{{640,500},"LOOKOUT","What a lovely view!",{130,169,111,255}},{{1030,500},"POND","There are fish in the pond.",{103,184,196,255}}}}
+}};
+void DrawSceneProps() {
+    for (const SceneProp& p : sceneProps[(size_t)selectedPlace]) {
+        DrawEllipse(p.position.x,p.position.y+18,29,8,Fade(ink,0.18f));
+        DrawRectangleRounded({p.position.x-25,p.position.y-15,50,32},0.28f,8,p.color);
+        DrawCircleV({p.position.x,p.position.y-17},13,Fade(WHITE,0.9f));
+        DrawText(p.label,(int)p.position.x-MeasureText(p.label,12)/2,(int)p.position.y+24,12,ink);
+    }
+}
+const SceneProp* FindNearbyProp() {
+    for (const SceneProp& p : sceneProps[(size_t)selectedPlace]) {
+        const float dx=player.x-p.position.x, dy=player.y-p.position.y;
+        if (dx*dx+dy*dy < 105.0f*105.0f) return &p;
+    }
+    return nullptr;
+}
 void DrawCharacter() {
     const float moving = walkTime > 0.0f ? 1.0f : 0.0f;
     const float bob = moving * std::fabs(std::sin(animationTime * 12.0f)) * 3.0f;
@@ -311,7 +335,12 @@ void DrawRegionScene() {
         }
     }
 
+    DrawSceneProps();
     DrawCharacter();
+    if (FindNearbyProp()) {
+        DrawRectangleRounded({480, 555, 320, 42}, 0.35f, 12, paper);
+        DrawText("E  INTERACT", 570, 568, 18, ink);
+    }
 
     DrawRectangleRounded({28, 24, 510, 88}, 0.22f, 16, paper);
     DrawText(p.name, 54, 40, 30, ink);
@@ -319,7 +348,7 @@ void DrawRegionScene() {
     DrawRectangleRounded({1080, 24, 170, 54}, 0.4f, 16, paper);
     DrawText("WORLD MAP", 1101, 42, 18, ink);
     DrawRectangleRounded({28, 650, 440, 42}, 0.35f, 12, Fade(paper, 0.92f));
-    DrawText("WASD / ARROWS: MOVE     E: EXPLORE", 45, 663, 16, ink);
+    DrawText("WASD / ARROWS: MOVE     E: INTERACT", 45, 663, 16, ink);
     if (animationTime < messageUntil) {
         DrawRectangleRounded({465, 610, 350, 52}, 0.35f, 14, paper);
         DrawText(sceneMessage.c_str(), 490, 627, 19, ink);
@@ -394,8 +423,9 @@ void UpdateGame(float dt) {
     player.y = std::clamp(player.y, 175.0f, 630.0f);
 
     if (IsKeyPressed(KEY_E)) {
-        sceneMessage = "You explored this place!";
-        messageUntil = animationTime + 2.4f;
+        if (const SceneProp* prop = FindNearbyProp()) sceneMessage = prop->message;
+        else sceneMessage = "Walk closer to an object to interact!";
+        messageUntil = animationTime + 2.8f;
     }
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && InRect({1080, 24, 170, 54}, pointer)) showMap = true;
